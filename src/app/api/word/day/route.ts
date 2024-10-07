@@ -3,9 +3,9 @@ import {
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   const USED_WORDS_CACHE = ["rapaz", "fardo", "carro"];
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API as string);
