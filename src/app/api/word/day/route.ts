@@ -4,18 +4,12 @@ import {
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { isSameDay, parseISO } from "date-fns";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   function generateRandomId() {
     return (Math.random() * 10000000000).toString(); // Gera um número aleatório
-  }
-
-  if (
-    req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`
-  ) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
   const randomId = generateRandomId();
