@@ -1,12 +1,49 @@
+import { createClient } from "@/utils/supabase/server";
 import {
   GenerationConfig,
   GoogleGenerativeAI,
   SchemaType,
 } from "@google/generative-ai";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { isSameDay, parseISO } from "date-fns";
 
-export async function GET() {
-  const USED_WORDS_CACHE = ["rapaz", "fardo", "carro"];
+export async function GET(req: NextRequest) {
+  function generateRandomId() {
+    return (Math.random() * 10000000000).toString(); // Gera um número aleatório
+  }
+
+  if (
+    req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const randomId = generateRandomId();
+  const supabase = createClient();
+
+  const { data: getWordsData, error: getWordsError } = await supabase
+    .from("palavras")
+    .select("*");
+
+  if (getWordsError) {
+    return NextResponse.json(
+      { message: getWordsError?.message },
+      { status: 400 }
+    );
+  }
+
+  const alreadyHaveWord = getWordsData?.some((item: { created_at: string }) =>
+    isSameDay(parseISO(item.created_at), new Date())
+  );
+
+  if (alreadyHaveWord) {
+    return NextResponse.json({ word: "Palavra do dia já foi gerada." });
+  }
+
+  const words = getWordsData?.map(
+    (item: { word: string }): string => JSON.parse(item.word).word
+  );
+  const USED_WORDS_CACHE = words?.join(", ");
 
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API as string);
   const prompt = `
@@ -16,7 +53,8 @@ export async function GET() {
     - Forneça apenas uma palavra.
     - As palavras não podem conter caracteres especiais.
     - Antes de responder, conte os caracteres da palavra e garanta que ela tem 5 letras.
-    - Não sugira as seguintes palavras: ${USED_WORDS_CACHE.join(", ")}.
+    - Não sugira as seguintes palavras: ${USED_WORDS_CACHE}.
+    - O ID desta sessão é ${randomId}.
   `;
 
   const model = genAI.getGenerativeModel({
@@ -46,7 +84,21 @@ export async function GET() {
     history: [],
   });
 
-  const result = await chatSession.sendMessage("Palavra do dia"); // Insira uma mensagem de entrada adequada
+  const result = await chatSession.sendMessage(
+    `Palavra do dia - ID: ${randomId}`
+  );
 
-  return NextResponse.json(JSON.parse(result.response.text()));
+  const wordOfDay = result.response.text();
+
+  const { error } = await supabase
+    .from("palavras")
+    .insert([{ word: wordOfDay }]);
+
+  if (error) {
+    return NextResponse.json({ message: error?.message }, { status: 400 });
+  }
+
+  return NextResponse.json({
+    palavra: "A palavra do dia foi gerada com sucesso.",
+  });
 }

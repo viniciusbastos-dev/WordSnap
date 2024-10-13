@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/word/day",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
