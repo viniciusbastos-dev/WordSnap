@@ -1,5 +1,5 @@
 import Header from "@/components/Header";
-import InputGrid from "@/components/InputGrid";
+import Game from "@/components/InputGrid";
 import { createClient } from "@/utils/supabase/server";
 import { isSameDay, parseISO } from "date-fns";
 
@@ -16,7 +16,7 @@ export default async function Home() {
   return (
     <main className="h-screen pt-20 flex flex-col items-center gap-20">
       <Header />
-      <InputGrid secretWord={parsedWord} />
+      <Game secretWord={parsedWord} />
     </main>
   );
 }

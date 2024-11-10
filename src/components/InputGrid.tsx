@@ -2,40 +2,62 @@
 import React, { useState } from "react";
 import Input from "./Input";
 import useEffectAfterMount from "@/hooks/useEffectAfterMount";
-import axios, { isAxiosError } from "axios";
-import { toast } from "react-toastify";
 
 interface Props {
   secretWord: string;
 }
-const InputGrid: React.FC<Props> = ({ secretWord }) => {
-  const [otp, setOtp] = useState("");
 
-  useEffectAfterMount(() => {
-    if (otp.length === 5) {
-      validateWord();
-    }
-  }, [otp]);
+const Game: React.FC<Props> = ({ secretWord }) => {
+  const inputsArr = Array(5).fill("");
 
-  const validateWord = async () => {
-    try {
-      await axios.post("/api/word/validate", {
-        word: otp,
-      });
-    } catch (error) {
-      if (isAxiosError(error)) toast.error(error?.response?.data.message);
-    }
+  const [attempts, setAttempts] = useState<string[][]>(
+    Array(5).fill(Array(5).fill(""))
+  );
+  const [currentAttempt, setCurrentAttempt] = useState(1);
+  const [winGame, setWinGame] = useState<boolean | null>(null);
+
+  const handleChange = (attemptIndex: number, otpCode: string) => {
+    const updatedAttempts = [...attempts];
+    updatedAttempts[attemptIndex] = otpCode.split("");
+    setAttempts(updatedAttempts);
   };
+
   return (
-    <div className="space-y-3">
-      <Input
-        length={5}
-        inputValue={otp}
-        onChange={(otpCode) => setOtp(otpCode)}
-        correctWord={secretWord}
-      />
-    </div>
+    <>
+      {winGame && (
+        <div>
+          <h1 className="text-3xl font-bold text-center">
+            Parabéns, você ganhou!
+          </h1>
+        </div>
+      )}
+
+      {winGame === false && (
+        <div>
+          <h1 className="text-3xl font-bold text-center">
+            Que pena, você perdeu
+          </h1>
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {inputsArr.map((_, index) => (
+          <Input
+            key={index}
+            length={5}
+            inputValue={attempts[index].join("")} // Passa o valor da tentativa atual
+            onChange={(otpCode) => handleChange(index, otpCode)}
+            correctWord={secretWord}
+            currentAttempt={currentAttempt}
+            attempt={index + 1}
+            setCurrentAttempt={setCurrentAttempt}
+            winGame={winGame}
+            setWinGame={setWinGame}
+          />
+        ))}
+      </div>
+    </>
   );
 };
 
-export default InputGrid;
+export default Game;
