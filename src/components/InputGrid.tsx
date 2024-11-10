@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import Input from "./Input";
-import useEffectAfterMount from "@/hooks/useEffectAfterMount";
 
 interface Props {
   secretWord: string;

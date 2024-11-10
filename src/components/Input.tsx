@@ -1,7 +1,6 @@
 "use client";
 import { validateWord } from "@/app/actions";
 import { cn } from "@/lib/utils";
-import axios, { isAxiosError } from "axios";
 import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
 

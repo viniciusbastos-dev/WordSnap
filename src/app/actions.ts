@@ -1,6 +1,5 @@
 "use server";
-
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import API from "../lib/axios-instance";
 
 export const validateWord = async (word: string) => {
@@ -13,10 +12,11 @@ export const validateWord = async (word: string) => {
       valid: response?.data?.valid,
       message: response?.data?.message,
     };
-  } catch (error: any) {
-    return {
-      valid: error?.response?.data?.valid,
-      message: error?.response?.data?.message,
-    };
+  } catch (error) {
+    if (error instanceof AxiosError)
+      return {
+        valid: error?.response?.data?.valid,
+        message: error?.response?.data?.message,
+      };
   }
 };
